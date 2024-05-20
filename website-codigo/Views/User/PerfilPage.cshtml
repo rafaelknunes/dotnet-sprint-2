@@ -1,0 +1,119 @@
+﻿@{
+    ViewData["Title"] = "Painel de Controle";
+    Layout = "_Layout";
+}
+
+<div style="max-width: 1000px; margin: auto; padding: 20px; background-color: #f9f9f9; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link @(Context.Request.Query["activeTab"] == "" || Context.Request.Query["activeTab"] == "dados" ? "active" : "")" href="#dados" data-toggle="tab">Dados do Usuário</a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link @(Context.Request.Query["activeTab"] == "comentarios" ? "active" : "")" href="#comentarios" data-toggle="tab">Comentários</a>
+        </li>
+
+    </ul>
+
+    <!-- Inicia Abas -->
+    <div class="tab-content" style="padding-top: 20px;">
+
+        <!-- Aba de dados do Usuário -->
+        <div class="tab-pane fade @((Context.Request.Query["activeTab"] == "" || Context.Request.Query["activeTab"] == "dados") ? "show active" : "")" id="dados">
+            <div style="text-align: center;">
+                <h1 style="color: #333;">@ViewBag.User.UserName</h1>
+                <p>Email: @ViewBag.User.UserEmail</p>
+                <p>Data de Registro: @ViewBag.User.DateRegister.ToString("dd MMM yyyy")</p>
+                <p>Status: @(ViewBag.User.IsActive ? "Active" : "Inactive")</p>
+            </div>
+            <hr />
+            <h2>Editar Perfil</h2>
+            <form asp-action="EditarPerfil" method="post">
+                <div class="form-group">
+                    <label for="UserName">Nome</label>
+                    <input type="text" class="form-control" id="UserName" name="UserName" value="@ViewBag.User.UserName" required />
+                </div>
+                <div class="form-group">
+                    <label for="UserEmail">Email</label>
+                    <input type="email" class="form-control" id="UserEmail" name="UserEmail" value="@ViewBag.User.UserEmail" required />
+                </div>
+                <div class="form-group">
+                    <label for="PasswordHash">Senha (deixe em branco para não alterar)</label>
+                    <input type="password" class="form-control" id="PasswordHash" name="PasswordHash" />
+                </div>
+                <button type="submit" class="btn btn-primary">Salvar</button>
+            </form>
+        </div>
+
+
+        <!-- Aba de Comentários -->
+        <div class="tab-pane fade @(Context.Request.Query["activeTab"] == "comentarios" ? "show active" : "")" id="comentarios">
+            <!-- Adicionar Comentários -->
+            <h2>Comentários</h2>
+            <form asp-action="PostarComentario" method="post">
+                <div class="form-group">
+                    <label for="CommentText">Comentário</label>
+                    <textarea class="form-control" id="CommentText" name="CommentText" required></textarea>
+                </div>
+                <input type="hidden" name="UserId" value="@ViewBag.User.Id" />
+                <button type="submit" class="btn btn-success">Postar</button>
+            </form>
+            <hr />
+            <!-- Lista de Comentários -->
+            <h3>Comentários</h3>
+            @if (ViewBag.Comments != null)
+            {
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Comentário</th>
+                            <th>Categoria</th>
+                            <th>Data</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var comment in ViewBag.Comments)
+                        {
+                            <tr>
+                                <td>@comment.Id</td>
+                                <td>@comment.CommentText</td>
+                                <td>@comment.Category?.CategoryName</td>
+                                <td>@comment.CommentDate.ToString("dd MMM yyyy HH:mm")</td>
+                                <td>
+                                    <form asp-action="EditarComentario" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@comment.Id" />
+                                        <input type="text" name="CommentText" value="@comment.CommentText" required />
+                                        <button type="submit" class="btn btn-primary">Editar</button>
+                                    </form>
+                                    <form asp-action="DeletarComentario" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@comment.Id" />
+                                        <button type="submit" class="btn btn-danger">Deletar</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p>Nenhum comentário encontrado.</p>
+            }
+        </div>
+
+
+    <!-- Encerra Abas -->
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            var activeTab = '@Context.Request.Query["activeTab"]' || 'dados';
+            $('.nav-tabs a[href="#' + activeTab + '"]').tab('show');
+        });
+    </script>
+}

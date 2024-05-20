@@ -1,0 +1,132 @@
+﻿@model IEnumerable<Hal.Models.Category>
+
+@{
+    ViewData["Title"] = "Painel Administrativo";
+    Layout = "_Layout";
+}
+
+<div style="max-width: 1000px; margin: auto; padding: 20px; background-color: #f9f9f9; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link @(Context.Request.Query["activeTab"] == "" || Context.Request.Query["activeTab"] == "categorias" ? "active" : "")" href="#categorias" data-toggle="tab">Categorias</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(Context.Request.Query["activeTab"] == "dashboard" ? "active" : "")" href="#dashboard" data-toggle="tab">Dashboard</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(Context.Request.Query["activeTab"] == "analise" ? "active" : "")" href="#analise" data-toggle="tab">Análise de Comentários</a>
+        </li>
+    </ul>
+
+    <!-- Abas -->
+    <div class="tab-content" style="padding-top: 20px;">
+
+        <!-- Aba de Categorias -->
+        <div class="tab-pane fade @((Context.Request.Query["activeTab"] == "" || Context.Request.Query["activeTab"] == "categorias") ? "show active" : "")" id="categorias">
+            <h2>Adicionar Nova Categoria</h2>
+            <form asp-action="CriarCategoria" method="post">
+                <div class="form-group">
+                    <label for="CategoryName">Nome da Categoria</label>
+                    <input type="text" class="form-control" id="CategoryName" name="CategoryName" required />
+                </div>
+                <div class="form-group">
+                    <label for="SubCategoryName">Nome da Subcategoria</label>
+                    <input type="text" class="form-control" id="SubCategoryName" name="SubCategoryName" required />
+                </div>
+                <button type="submit" class="btn btn-success">Adicionar</button>
+            </form>
+
+            <h2>Categorias</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Category Name</th>
+                        <th>Subcategory Name</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var category in Model)
+                    {
+                        <tr>
+                            <td>@category.Id</td>
+                            <td>@category.CategoryName</td>
+                            <td>@category.SubCategoryName</td>
+                            <td>
+                                <form asp-action="EditarCategoria" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@category.Id" />
+                                    <input type="text" name="CategoryName" value="@category.CategoryName" required />
+                                    <input type="text" name="SubCategoryName" value="@category.SubCategoryName" required />
+                                    <button type="submit" class="btn btn-primary">Editar</button>
+                                </form>
+                                <form asp-action="DeletarCategoria" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@category.Id" />
+                                    <button type="submit" class="btn btn-danger">Deletar</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Aba de Dashboard -->
+        <div class="tab-pane fade @(Context.Request.Query["activeTab"] == "dashboard" ? "show active" : "")" id="dashboard">
+            <iframe src="https://app.powerbi.com/view?r=eyJrIjoiM2I0YWMxMTItYjdmMC00Y2EzLWFkODEtZDY0OTM5NDM5YWU1IiwidCI6IjA4YTBiODI0LTU2ZjktNDk4My1hYzhhLTNmZDM3M2Y2ODQ2NiIsImMiOjF9" style="width:100%; height:600px; border:none;"></iframe>
+        </div>
+
+        <!-- Aba de Análise de Comentários -->
+        <div class="tab-pane fade @(Context.Request.Query["activeTab"] == "analise" ? "show active" : "")" id="analise">
+            <h2>Análise de Comentários</h2>
+            @if (ViewBag.Comments != null)
+            {
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Data Criação</th>
+                            <th>Categoria</th>
+                            <th>Usuário</th>
+                            <th>Comentário</th>
+                            <th>Sentimento</th>
+                            <th>Prob. Disputa</th>
+                            <th>Oportunidade de Venda</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in ViewBag.Comments)
+                        {
+                            <tr>
+                                <td>@item.Comment.Id</td>
+                                <td>@item.Comment.CommentDate.ToString("dd MMM yyyy HH:mm")</td>
+                                <td>@item.Comment.Category?.CategoryName</td>
+                                <td>@item.Comment.User?.UserName</td>
+                                <td>@item.Comment.CommentText</td>
+                                <td>@item.Comment.Evaluation?.Sentiment</td>
+                                <td>@item.Percentage %</td>
+                                <td>@item.ProductName</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p>Nenhum comentário encontrado.</p>
+            }
+        </div>
+
+    <!-- Abas -->
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            var activeTab = '@Context.Request.Query["activeTab"]' || 'categorias';
+            $('.nav-tabs a[href="#' + activeTab + '"]').tab('show');
+        });
+    </script>
+}
